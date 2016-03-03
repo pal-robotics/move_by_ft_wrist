@@ -1,0 +1,10 @@
+<launch>
+        <!-- <node pkg="marco_tools" type="joystick_pose.py" name="joystick_pose" output="screen">
+        </node> -->
+        <node pkg="move_by_ft_wrist" type="arm_by_ft_wrist.py" name="arm_by_ft_wrist" output="screen">
+        </node>
+        <node pkg="wbc_state_machines" type="joystick_arm_teleop.py" name="joystick_arm_teleop_wbc_sm" output="screen">
+        </node>
+        <node pkg="marco_tools" type="go_to_control_mode.py" name="go_to_control_mode_wbc" output="screen" args="w"/>
+        <node pkg="marco_tools" type="head_pose_filter.py" name="head_pose_filter" output="screen"/>
+</launch>
