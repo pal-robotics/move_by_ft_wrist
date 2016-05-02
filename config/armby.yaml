@@ -1,5 +1,42 @@
-{axis_force: zxy, axis_torque: zxy, fx_deadband: 5.0, fx_scaling: 0.005, fy_deadband: 5.0,
-  fy_scaling: 0.005, fz_deadband: 10.0, fz_scaling: 0.005, max_x: 0.6, max_y: -0.05,
-  max_z: 0.2, min_x: 0.0, min_y: -0.5, min_z: -0.2, rate: 10, send_goals: false, sign_force: +++,
-  sign_torque: +++, tx_deadband: 0.1, tx_scaling: 0.2, ty_deadband: 0.1, ty_scaling: 0.2,
-  tz_deadband: 0.1, tz_scaling: 0.2}
+# axis to flip (rotation-like)
+# interpreted as axis_force[0] will be the data used as X, [1] data used as Y, [2] data used as Z
+# from the wrench message
+axis_force: zxy
+axis_torque: zxy
+# Signs (to be applied after flipping axis), if you put - it will be multiplied by -1.0
+sign_force: +++
+sign_torque: +++
+
+# Force stuff
+# Deadband, absolute value of signal must exceed this value before modifying goal
+fx_deadband: 5.0
+# Scaling, factor to multiply the reading of the wrench to generate position displacement
+fx_scaling: 0.005
+fy_deadband: 5.0
+fy_scaling: 0.005
+fz_deadband: 10.0
+fz_scaling: 0.005
+# Workspace limits in /world
+max_x: 0.6
+max_y: -0.05
+max_z: 0.2
+min_x: 0.0
+min_y: -0.5
+min_z: -0.2
+# Rate of goal sending of the node
+rate: 10
+# If to send goals to the real topic, there is a debug topic at /force_torqued_pose
+send_goals: false
+
+# Torque stuff
+tx_deadband: 0.1
+# Scaling, factor to multiply the reading of the wrench to generate orientation displacement
+tx_scaling: 0.2
+ty_deadband: 0.1
+ty_scaling: 0.2
+tz_deadband: 0.1
+tz_scaling: 0.2
+
+# Frame id on where the goals are sent, this could be changed to arm_right_7_link for example
+# Altho the axis_force and axis_torque would be needed to be changed
+goal_frame_id: arm_right_tool_link

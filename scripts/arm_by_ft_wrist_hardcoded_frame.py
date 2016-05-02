@@ -88,15 +88,16 @@ class ArmByFtWrist(object):
 
         self.dyn_rec_srv = Server(HandshakeConfig, self.dyn_rec_callback)
 
-
-
         # Goal to send to WBC
         self.tf_l = TransformListener()
         rospy.sleep(3.0)  # Let the subscriber to its job
         self.initial_pose = self.get_initial_pose()
+        self.tf_l = None  # Let the garbage collector kill it
         self.current_pose = self.initial_pose
         self.last_pose_to_follow = deepcopy(self.current_pose)
-        self.pose_pub = rospy.Publisher('/whole_body_kinematic_controler/arm_right_tool_link_goal',
+        if self.goal_frame_id[0] == '/':
+            self.goal_frame_id = self.goal_frame_id[1:]
+        self.pose_pub = rospy.Publisher('/whole_body_kinematic_controler/' + self.goal_frame_id + '_goal',
                                         PoseStamped,
                                         queue_size=1)
 
@@ -167,6 +168,14 @@ class ArmByFtWrist(object):
         self.axis_torque = config['axis_torque']
         self.sign_torque = config['sign_torque']
 
+        if config['goal_frame_id'][0] == '/':
+            config['goal_frame_id'] = config['goal_frame_id'][1:]
+        if config['goal_frame_id'] != self.goal_frame_id:
+            self.goal_frame_id = config['goal_frame_id']
+            self.pose_pub = rospy.Publisher('/whole_body_kinematic_controler/' + self.goal_frame_id + '_goal',
+                                            PoseStamped,
+                                            queue_size=1)
+
         args = []
         for sign in self.sign_force:
             if sign == '+':
@@ -181,14 +190,14 @@ class ArmByFtWrist(object):
                 args.append(-1.0)
 
         args.extend([self.axis_force[0], self.axis_force[1], self.axis_force[2],
-                                       self.axis_torque[0], self.axis_torque[1], self.axis_torque[2]])
+                     self.axis_torque[0], self.axis_torque[1], self.axis_torque[2]])
 
         self.frame_fixer = WrenchFixer(*args)
 
         return config
 
     def follow_pose_cb(self, data):
-        if data.header.frame_id != '/world':
+        if data.header.frame_id != '/world' and data.header.frame_id != 'world':
             rospy.logwarn(
                 "Poses to follow should be in frame /world, transforming into /world...")
             world_ps = self.transform_pose_to_world(
@@ -228,7 +237,7 @@ class ArmByFtWrist(object):
         zero_pose.orientation.w = 1.0
 
         current_pose = self.transform_pose_to_world(
-            zero_pose, from_frame="arm_right_tool_link")
+            zero_pose, from_frame=self.goal_frame_id)
         return current_pose
 
     def get_abs_total_force(self, wrench_msg):
@@ -240,18 +249,21 @@ class ArmByFtWrist(object):
         return abs(t.x) + abs(t.y) + abs(t.z)
 
     def run(self):
+        rospy.loginfo(
+            "Waiting for first wrench message on: " + str(self.wrench_sub.resolved_name))
         while not rospy.is_shutdown() and self.last_wrench is None:
             rospy.sleep(0.2)
         r = rospy.Rate(self.rate)
+        rospy.loginfo("Node running!")
         while not rospy.is_shutdown():
             # To change the node rate
             if self.rate_changed:
                 r = rospy.Rate(self.rate)
                 self.rate_changed = False
-            self.move_towards_force_torque_with_tf()
+            self.follow_pose_with_admitance_by_ft()
             r.sleep()
 
-    def move_towards_force_torque_with_tf(self):
+    def follow_pose_with_admitance_by_ft(self):
         fx, fy, fz = self.get_force_movement()
         rospy.loginfo(
             "fx, fy, fz: " + str((round(fx, 3), round(fy, 3), round(fz, 3))))
