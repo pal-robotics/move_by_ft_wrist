@@ -7,6 +7,7 @@ project(move_by_ft_wrist)
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   rospy
+  dynamic_reconfigure
 )
 
 ## System dependencies are found with CMake's conventions
@@ -84,10 +85,9 @@ find_package(catkin REQUIRED COMPONENTS
 ##     and list every .cfg file to be processed
 
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
-# generate_dynamic_reconfigure_options(
-#   cfg/DynReconf1.cfg
-#   cfg/DynReconf2.cfg
-# )
+generate_dynamic_reconfigure_options(
+  cfg/Handshake.cfg
+)
 
 ###################################
 ## catkin specific configuration ##
@@ -147,10 +147,11 @@ include_directories(
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
-# install(PROGRAMS
-#   scripts/my_python_script
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+install(PROGRAMS
+  scripts/arm_by_ft_wrist_dynamic_offset.py
+  scripts/arm_by_ft_wrist_hardcoded_frame.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 ## Mark executables and/or libraries for installation
 # install(TARGETS move_by_ft_wrist move_by_ft_wrist_node

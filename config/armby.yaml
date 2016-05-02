@@ -1,0 +1,5 @@
+{axis_force: zxy, axis_torque: zxy, fx_deadband: 5.0, fx_scaling: 0.005, fy_deadband: 5.0,
+  fy_scaling: 0.005, fz_deadband: 10.0, fz_scaling: 0.005, max_x: 0.6, max_y: -0.05,
+  max_z: 0.2, min_x: 0.0, min_y: -0.5, min_z: -0.2, rate: 10, send_goals: false, sign_force: +++,
+  sign_torque: +++, tx_deadband: 0.1, tx_scaling: 0.2, ty_deadband: 0.1, ty_scaling: 0.2,
+  tz_deadband: 0.1, tz_scaling: 0.2}
