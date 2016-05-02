@@ -1,0 +1,3 @@
+<launch>
+    <include file="$(find reemc_wbc_tutorials)/launch/reemc_admitance_upper_body.launch" />
+</launch>

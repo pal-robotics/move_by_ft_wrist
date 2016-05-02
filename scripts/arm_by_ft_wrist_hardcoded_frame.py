@@ -86,6 +86,8 @@ class ArmByFtWrist(object):
                                        'z', 'x', 'y',
                                        'z', 'x', 'y')
 
+        self.goal_frame_id = "arm_right_tool_link"
+
         self.dyn_rec_srv = Server(HandshakeConfig, self.dyn_rec_callback)
 
         # Goal to send to WBC
@@ -267,17 +269,13 @@ class ArmByFtWrist(object):
         fx, fy, fz = self.get_force_movement()
         rospy.loginfo(
             "fx, fy, fz: " + str((round(fx, 3), round(fy, 3), round(fz, 3))))
-        send_new_goal = False
         ps = Pose()
         if abs(fx) > self.fx_deadband:
             ps.position.x = (fx * self.fx_scaling) * self.frame_fixer.fx
-            send_new_goal = True
         if abs(fy) > self.fy_deadband:
             ps.position.y = (fy * self.fy_scaling) * self.frame_fixer.fy
-            send_new_goal = True
         if abs(fz) > self.fz_deadband:
             ps.position.z = (fz * self.fz_scaling) * self.frame_fixer.fz
-            send_new_goal = True
 
         tx, ty, tz = self.get_torque_movement()
         rospy.loginfo(
@@ -286,13 +284,10 @@ class ArmByFtWrist(object):
         roll = pitch = yaw = 0.0
         if abs(tx) > self.tx_deadband:
             roll += (tx * self.tx_scaling) * self.frame_fixer.tx
-            send_new_goal = True
         if abs(ty) > self.ty_deadband:
             pitch += (ty * self.ty_scaling) * self.frame_fixer.ty
-            send_new_goal = True
         if abs(tz) > self.tz_deadband:
             yaw += (tz * self.tz_scaling) * self.frame_fixer.tz
-            send_new_goal = True
 
         q = quaternion_from_euler(roll, pitch, yaw)
         ps.orientation = Quaternion(*q)
@@ -323,9 +318,12 @@ class ArmByFtWrist(object):
         self.current_pose.pose.position.z = self.sanitize(self.current_pose.pose.position.z,
                                                           self.min_z,
                                                           self.max_z)
-
-        if self.send_goals and send_new_goal:
+        self.current_pose.header.stamp = rospy.Time.now()
+        if self.send_goals: # send MODIFIED GOALS
             self.pose_pub.publish(self.current_pose)
+        else:
+            self.last_pose_to_follow.header.stamp = rospy.Time.now()
+            self.pose_pub.publish(self.last_pose_to_follow)
         self.debug_pose_pub.publish(self.current_pose)
 
     def get_force_movement(self):

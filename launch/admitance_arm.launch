@@ -3,11 +3,11 @@
      right arm position and orientation goals /whole_body_kinematic_controler/arm_right_tool_link_goal
      legs stabilizer
      gaze goal  /whole_body_kinematic_controler/gaze_objective_stereo_optical_frame_goal -->
-     <include file="$find(reemc_wbc_tutorials)/launch/reemc_wbc_humanoids_ft_imu_right_arm_only.launch"/>
+    <include file="$(find reemc_wbc_tutorials)/launch/reemc_wbc_humanoids_ft_imu_right_arm_only.launch"/>/>
 
     <!-- Node to follow a goal but allow disturbances on the end effector -->
     <node pkg="move_by_ft_wrist" type="arm_by_ft_wrist_hardcoded_frame.py" name="arm_by_ft_wrist" output="screen">
-        <rosparam command="load" file="$find(move_by_ft_wrist)/config/armby.yaml"/>
+        <rosparam command="load" file="$(find move_by_ft_wrist)/config/armby.yaml"/>
     </node>
 
     <!-- if playing with different WBC configurations we may need to do: 

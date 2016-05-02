@@ -87,6 +87,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
 generate_dynamic_reconfigure_options(
   cfg/Handshake.cfg
+  cfg/ForceTorque.cfg
 )
 
 ###################################
@@ -148,8 +149,12 @@ include_directories(
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 install(PROGRAMS
-  scripts/arm_by_ft_wrist_dynamic_offset.py
+  # scripts/arm_by_ft_wrist_dynamic_offset.py
   scripts/arm_by_ft_wrist_hardcoded_frame.py
+  scripts/admitance_handshake.py
+  scripts/close_hand_by_ft.py
+  scripts/wrench_marker.py
+  scripts/force_torque_publisher.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
