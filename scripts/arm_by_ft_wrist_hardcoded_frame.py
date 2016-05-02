@@ -6,7 +6,7 @@ Created on 26/04/16
 """
 
 import rospy
-from geometry_msgs.msg import PoseStamped, Pose, Point, Quaternion
+from geometry_msgs.msg import PoseStamped, Pose, Quaternion
 from geometry_msgs.msg import WrenchStamped
 from tf.transformations import quaternion_from_euler, euler_from_quaternion
 from tf import TransformListener, ExtrapolationException
