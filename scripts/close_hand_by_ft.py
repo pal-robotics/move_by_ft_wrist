@@ -11,14 +11,19 @@ class HandByFT(object):
         self.last_ft_msg = None
         # First message will be used as offset of the force torque sensor for what is considered 0
         self.initial_ft_msg = None
-        self.ft_sub = rospy.Subscriber('/right_wrist_ft', WrenchStamped, self.ft_cb, queue_size=1)
-        self.hand_pub = rospy.Publisher('/right_hand_controller/command', JointTrajectory, queue_size=1)
+        self.robot = rospy.get_param('~robot', 'tiago')
+        if self.robot == "reemc":
+            self.ft_sub = rospy.Subscriber('/right_wrist_ft', WrenchStamped, self.ft_cb, queue_size=1)
+            self.hand_pub = rospy.Publisher('/right_hand_controller/command', JointTrajectory, queue_size=1)
+        if self.robot == "tiago":
+            self.ft_sub = rospy.Subscriber('/wrist_ft', WrenchStamped, self.ft_cb, queue_size=1)
+            self.hand_pub = rospy.Publisher('/hand_controller/command', JointTrajectory, queue_size=1)
         self.active = False
         self.activate_sub = rospy.Subscriber('/activate_hand_by_ft', Empty, self.activate_cb, queue_size=1)
         self.deactivate_sub = rospy.Subscriber('/deactivate_hand_by_ft', Empty, self.deactivate_cb, queue_size=1)
         # Some meaningful values for ignoring noise and not needing to do too much force on the wrist to close it
-        self.min_force_amount = 15.0
-        self.max_force_amount = 50.0
+        self.min_force_amount = rospy.get_param('~min_force_amount', 15.0)
+        self.max_force_amount = rospy.get_param('~max_force_amount', 40.0)
 
     def activate_cb(self, data):
         self.active = True
@@ -74,7 +79,10 @@ class HandByFT(object):
 
     def create_hand_goal(self, closing_amount):
         jt = JointTrajectory()
-        jt.joint_names = ['hand_right_thumb_joint', 'hand_right_index_joint', 'hand_right_mrl_joint']
+        if self.robot == "reemc":
+            jt.joint_names = ['hand_right_thumb_joint', 'hand_right_index_joint', 'hand_right_mrl_joint']
+        if self.robot == "tiago":
+            jt.joint_names = ['hand_thumb_joint', 'hand_index_joint', 'hand_mrl_joint']
         jtp = JointTrajectoryPoint()
         # Hardcoded joint limits
         jtp.positions = [closing_amount * 6.0, closing_amount * 6.0, closing_amount * 9.0]

@@ -25,13 +25,17 @@ class InteractiveMarkerPoseStampedPublisher():
         self.server = InteractiveMarkerServer("posestamped_im")
         self.menu_handler = MenuHandler()
         # self.pub = rospy.Publisher('/whole_body_kinematic_controler/wrist_right_ft_link_goal', PoseStamped, queue_size=1)
-        self.pub = rospy.Publisher('/whole_body_kinematic_controler/arm_right_7_link_goal', PoseStamped, queue_size=1)
+        # self.pub = rospy.Publisher('/whole_body_kinematic_controler/arm_right_7_link_goal', PoseStamped, queue_size=1)
+        self.pub = rospy.Publisher('/pose_to_follow', PoseStamped, queue_size=1)
         rospy.loginfo("Publishing posestampeds at topic: " + str(self.pub.name))
+        #self.global_frame_id = 'world'
+        self.global_frame_id = 'base_footprint'
         pose = Pose()
         pose.position.x = 0.2
         # pose.position.y = 0.35
         pose.position.y = -0.35
-        pose.position.z = 0.1
+        #pose.position.z = 0.1
+        pose.position.z = 1.1
         pose.orientation.w = 1.0
         # pose.orientation.x = 0.35762
         # pose.orientation.y = 0.50398
@@ -65,7 +69,7 @@ class InteractiveMarkerPoseStampedPublisher():
         elif feedback.event_type == InteractiveMarkerFeedback.POSE_UPDATE:
             rospy.loginfo( s + ": pose changed")
             ps = PoseStamped()
-            ps.header.frame_id = '/world'
+            ps.header.frame_id = self.global_frame_id #'/world'
             ps.pose = feedback.pose
             self.pub.publish(ps)
 
@@ -119,7 +123,7 @@ class InteractiveMarkerPoseStampedPublisher():
         :type pose: Pose
         """
         int_marker = InteractiveMarker()
-        int_marker.header.frame_id = "/world"
+        int_marker.header.frame_id = self.global_frame_id # "/world"
         int_marker.pose = pose
         int_marker.scale = 0.3
 

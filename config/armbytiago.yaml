@@ -13,20 +13,20 @@ fx_deadband: 5.0
 # Scaling, factor to multiply the reading of the wrench to generate position displacement
 fx_scaling: 0.005
 fy_deadband: 5.0
-fy_scaling: 0.005
+fy_scaling: 0.003
 fz_deadband: 10.0
-fz_scaling: 0.005
-# Workspace limits in /world
-max_x: 0.6
-max_y: -0.05
-max_z: 0.2
-min_x: 0.0
+fz_scaling: 0.003
+# Workspace limits in /base_footprint
+max_x: 0.8
+min_x: 0.1
+max_y: 0.5
 min_y: -0.5
-min_z: -0.2
+min_z: 0.2
+max_z: 2.0
 # Rate of goal sending of the node
-rate: 10
+rate: 20
 # If to send goals to the real topic, there is a debug topic at /force_torqued_pose
-send_goals: false
+send_goals: true
 
 # Torque stuff
 tx_deadband: 0.1
@@ -39,9 +39,9 @@ tz_scaling: 0.2
 
 # Frame id on where the goals are sent, this could be changed to arm_right_7_link for example
 # Altho the axis_force and axis_torque would be needed to be changed
-goal_frame_id: arm_right_tool_link
-global_frame_id: world
-wbc_goal_topic: /whole_body_kinematic_controler/arm_right_tool_link_goal
+goal_frame_id: arm_tool_link
+global_frame_id: base_footprint
+wbc_goal_topic: /joystick_pose_goal
 pose_to_follow_topic: /pose_to_follow
 debug_topic: /force_torqued_pose
-force_torque_topic: /right_wrist_ft
+force_torque_topic: /wrist_ft

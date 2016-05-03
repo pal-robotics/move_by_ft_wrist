@@ -87,36 +87,45 @@ class ArmByFtWrist(object):
                                        'z', 'x', 'y')
 
         self.goal_frame_id = "arm_right_tool_link"
+        self.global_frame_id = "world"
+        self.wbc_goal_topic = "/whole_body_kinematic_controler/arm_right_tool_link_goal"
+        self.pose_to_follow_topic = "/pose_to_follow"
+        self.debug_topic = "/force_torqued_pose"
+        self.force_torque_topic = "/right_wrist_ft"
 
+        # All the previous params will be reset if there are parameters in the
+        # param server
         self.dyn_rec_srv = Server(HandshakeConfig, self.dyn_rec_callback)
 
         # Goal to send to WBC
+        # TODO: make this prettier
         self.tf_l = TransformListener()
         rospy.sleep(3.0)  # Let the subscriber to its job
         self.initial_pose = self.get_initial_pose()
-        self.tf_l = None  # Let the garbage collector kill it
+        self.tf_l = None
         self.current_pose = self.initial_pose
         self.last_pose_to_follow = deepcopy(self.current_pose)
         if self.goal_frame_id[0] == '/':
             self.goal_frame_id = self.goal_frame_id[1:]
-        self.pose_pub = rospy.Publisher('/whole_body_kinematic_controler/' + self.goal_frame_id + '_goal',
+
+        self.pose_pub = rospy.Publisher(self.wbc_goal_topic,
                                         PoseStamped,
                                         queue_size=1)
 
         # Safe debugging goal
-        self.debug_pose_pub = rospy.Publisher('/force_torqued_pose',
+        self.debug_pose_pub = rospy.Publisher(self.debug_topic,
                                               PoseStamped,
                                               queue_size=1)
 
         # Goal to follow
-        self.follow_sub = rospy.Subscriber('/pose_to_follow',
+        self.follow_sub = rospy.Subscriber(self.pose_to_follow_topic,
                                            PoseStamped,
                                            self.follow_pose_cb,
                                            queue_size=1)
 
         # Sensor input
         self.last_wrench = None
-        self.wrench_sub = rospy.Subscriber('/right_wrist_ft',
+        self.wrench_sub = rospy.Subscriber(self.force_torque_topic,
                                            WrenchStamped,
                                            self.wrench_cb,
                                            queue_size=1)
@@ -174,9 +183,37 @@ class ArmByFtWrist(object):
             config['goal_frame_id'] = config['goal_frame_id'][1:]
         if config['goal_frame_id'] != self.goal_frame_id:
             self.goal_frame_id = config['goal_frame_id']
-            self.pose_pub = rospy.Publisher('/whole_body_kinematic_controler/' + self.goal_frame_id + '_goal',
+
+        if config['global_frame_id'][0] == '/':
+            config['global_frame_id'] = config['global_frame_id'][1:]
+        if config['global_frame_id'] != self.global_frame_id:
+            self.global_frame_id = config['global_frame_id']
+
+        if self.wbc_goal_topic != config["wbc_goal_topic"]:
+            self.wbc_goal_topic = config["wbc_goal_topic"]
+            self.pose_pub = rospy.Publisher(self.wbc_goal_topic,
                                             PoseStamped,
                                             queue_size=1)
+
+        if self.debug_topic != config["debug_topic"]:
+            self.debug_topic = config["debug_topic"]
+            self.debug_pose_pub = rospy.Publisher(self.debug_topic,
+                                                  PoseStamped,
+                                                  queue_size=1)
+
+        if self.force_torque_topic != config["force_torque_topic"]:
+            self.force_torque_topic = config["force_torque_topic"]
+            self.wrench_sub = rospy.Subscriber(self.force_torque_topic,
+                                               WrenchStamped,
+                                               self.wrench_cb,
+                                               queue_size=1)
+
+        if self.pose_to_follow_topic != config["pose_to_follow_topic"]:
+            self.pose_to_follow_topic = config["pose_to_follow_topic"]
+            self.follow_sub = rospy.Subscriber(self.pose_to_follow_topic,
+                                               PoseStamped,
+                                               self.follow_pose_cb,
+                                               queue_size=1)
 
         args = []
         for sign in self.sign_force:
@@ -199,14 +236,19 @@ class ArmByFtWrist(object):
         return config
 
     def follow_pose_cb(self, data):
-        if data.header.frame_id != '/world' and data.header.frame_id != 'world':
+        if data.header.frame_id[0] == '/':
+            frame_id = data.header.frame_id[1:]
+        else:
+            frame_id = data.header.frame_id
+        if frame_id != self.global_frame_id:
             rospy.logwarn(
-                "Poses to follow should be in frame /world, transforming into /world...")
+                "Poses to follow should be in frame " + self.global_frame_id +
+                 " and is in " + str(frame_id) + ", transforming into " + self.global_frame_id + "...")
             world_ps = self.transform_pose_to_world(
                 data.pose, from_frame=data.header.frame_id)
             ps = PoseStamped()
             ps.header.stamp = data.header.stamp
-            ps.header.frame_id = '/world'
+            ps.header.frame_id = self.global_frame_id
             ps.pose = world_ps
             self.last_pose_to_follow = ps
         else:
@@ -214,14 +256,15 @@ class ArmByFtWrist(object):
 
     def transform_pose_to_world(self, pose, from_frame="arm_right_tool_link"):
         ps = PoseStamped()
-        ps.header.stamp = self.tf_l.getLatestCommonTime("world", from_frame)
+        ps.header.stamp = self.tf_l.getLatestCommonTime(
+            self.global_frame_id, from_frame)
         ps.header.frame_id = "/" + from_frame
         # TODO: check pose being PoseStamped or Pose
         ps.pose = pose
         transform_ok = False
         while not transform_ok and not rospy.is_shutdown():
             try:
-                world_ps = self.tf_l.transformPose("/world", ps)
+                world_ps = self.tf_l.transformPose(self.global_frame_id, ps)
                 transform_ok = True
                 return world_ps
             except ExtrapolationException as e:
@@ -229,7 +272,7 @@ class ArmByFtWrist(object):
                     "Exception on transforming pose... trying again \n(" + str(e) + ")")
                 rospy.sleep(0.05)
                 ps.header.stamp = self.tf_l.getLatestCommonTime(
-                    "world", from_frame)
+                    self.global_frame_id, from_frame)
 
     def wrench_cb(self, data):
         self.last_wrench = data
@@ -319,7 +362,7 @@ class ArmByFtWrist(object):
                                                           self.min_z,
                                                           self.max_z)
         self.current_pose.header.stamp = rospy.Time.now()
-        if self.send_goals: # send MODIFIED GOALS
+        if self.send_goals:  # send MODIFIED GOALS
             self.pose_pub.publish(self.current_pose)
         else:
             self.last_pose_to_follow.header.stamp = rospy.Time.now()

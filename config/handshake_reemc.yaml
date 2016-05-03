@@ -1,0 +1,16 @@
+min_avg_force_to_trigger: 15.0
+handshake_poses_time_step: 3.0
+
+global_frame_id: world
+initial_pose_x: 0.35
+initial_pose_y: -0.27
+initial_pose_z: 0.0
+
+initial_pose_roll_degrees: 0.0
+initial_pose_pitch_degrees: 21.0
+initial_pose_yaw_degrees: 17.0
+
+wrench_topic: /right_wrist_ft
+pose_to_follow_topic: /pose_to_follow
+num_times_shake: 3
+shake_amount_z: 0.15

@@ -1,0 +1,29 @@
+<launch>
+
+    <!-- Node to follow a goal but allow disturbances on the end effector -->
+    <node pkg="move_by_ft_wrist" type="arm_by_ft_wrist_hardcoded_frame.py" name="arm_by_ft_wrist" output="screen">
+        <rosparam command="load" file="$(find move_by_ft_wrist)/config/armbytiago.yaml"/>
+    </node>
+
+    <node pkg="move_by_ft_wrist" type="force_torque_publisher.py" name="force_torque_publisher" output="screen">
+    </node>
+
+    <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconf_stuff" />
+
+    <node pkg="move_by_ft_wrist" type="interactive_marker_posestamped.py" name="im_posestamped">
+        <!-- <remap from="/whole_body_kinematic_controler/arm_right_7_link_goal" to="/pose_to_follow" /> -->
+    </node>
+
+    <node pkg="move_by_ft_wrist" type="admitance_handshake.py" name="admitance_handshake" output="screen">
+      <rosparam file="$(find move_by_ft_wrist)/config/handshake_tiago.yaml"/>
+    </node>
+
+    <node pkg="move_by_ft_wrist" type="close_hand_by_ft.py" name="close_hand_by_ft" output="screen">
+      <param name="robot" value="tiago" />
+      <param name="min_force_amount" value="10.0"/>
+      <param name="max_force_amount" value="30.0"/>
+    </node>
+
+  <!-- <include file="$(find reemc_controller_configuration)/launch/hey5_controller.launch"/> -->
+
+</launch>

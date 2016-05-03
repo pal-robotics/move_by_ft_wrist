@@ -20,22 +20,46 @@ class AdmitanceHandshake(object):
         self.deactivate_pub = rospy.Publisher(
             '/deactivate_hand_by_ft', Empty, queue_size=1)
 
-        self.min_avg_force_to_trigger = 15.0
-        self.handshake_poses_time_step = 3.0
-
+        self.min_avg_force_to_trigger = rospy.get_param(
+            '~min_avg_force_to_trigger', 15.0)
+        self.handshake_poses_time_step = rospy.get_param(
+            '~handshake_poses_time_step', 3.0)
         self.initial_pose = Pose()
-        self.initial_pose.position.x = 0.25
-        self.initial_pose.position.y = -0.271
-        self.initial_pose.position.z = 0.23
-        q = quaternion_from_euler(radians(0.0), radians(21.0), radians(17.0))  # hand a bit inclined forward and inside
+        # REEMC values
+        # self.initial_pose.position.x = 0.25
+        # self.initial_pose.position.y = -0.271
+        # self.initial_pose.position.z = 0.23
+        # TIAGO values
+        self.initial_pose.position.x = rospy.get_param('~initial_pose_x', 0.4)
+        self.initial_pose.position.y = rospy.get_param(
+            '~initial_pose_y', -0.2)
+        self.initial_pose.position.z = rospy.get_param('~initial_pose_z', 1.1)
+
+        # REEMC
+        #self.global_frame_id = '/world'
+        # TIAGO
+        self.global_frame_id = rospy.get_param(
+            '~global_frame_id', 'base_footprint')
+
+        self.initial_pose_roll_degrees = rospy.get_param(
+            '~initial_pose_roll_degrees', 0.0)
+        self.initial_pose_pitch_degrees = rospy.get_param(
+            '~initial_pose_pitch_degrees', 21.0)
+        self.initial_pose_yaw_degrees = rospy.get_param(
+            '~initial_pose_yaw_degrees', 17.0)
+
+        q = quaternion_from_euler(radians(self.initial_pose_roll_degrees),
+                                  radians(self.initial_pose_pitch_degrees),
+                                  radians(self.initial_pose_yaw_degrees))  # hand a bit inclined forward and inside
         self.initial_pose.orientation = Quaternion(*q)
 
-
         self.last_wrench = None
-        self.wrench_sub = rospy.Subscriber('/right_wrist_ft',
+        self.wrench_topic = rospy.get_param('~wrench_topic', '/right_wrist_ft')
+        self.wrench_sub = rospy.Subscriber(self.wrench_topic,
                                            WrenchStamped,
                                            self.wrench_cb,
                                            queue_size=1)
+        rospy.loginfo("Listening to wrench at: " + str(self.wrench_sub.resolved_name))
 
         self.executing_handshake = False
         self.trigger_sub = rospy.Subscriber('/admitance_handshake_trigger',
@@ -43,9 +67,13 @@ class AdmitanceHandshake(object):
                                             self.trigger_cb,
                                             queue_size=1)
 
-        self.follow_pose_pub = rospy.Publisher('/pose_to_follow',
+        self.pose_to_follow_topic = rospy.get_param('~pose_to_follow_topic', '/pose_to_follow')
+        self.follow_pose_pub = rospy.Publisher(self.pose_to_follow_topic,
                                                PoseStamped,
                                                queue_size=1)
+
+        self.num_times_shake = rospy.get_param('~num_times_shake', 3)
+        self.shake_amount_z = rospy.get_param('~shake_amount_z', 0.15)
 
         rospy.loginfo("Node initialized.")
 
@@ -71,34 +99,26 @@ class AdmitanceHandshake(object):
 
     def do_handshake(self):
         rospy.loginfo("Doing handshake")
-        # go down and wait
-        ps = PoseStamped()
-        ps.header.stamp = rospy.Time.now()
-        ps.header.frame_id = '/world'
+        for i in range(self.num_times_shake):
+            # go down and wait
+            ps = PoseStamped()
+            ps.header.stamp = rospy.Time.now()
+            ps.header.frame_id = self.global_frame_id
 
-        ps.pose = deepcopy(self.initial_pose)
-        ps.pose.position.z += -0.05
+            ps.pose = deepcopy(self.initial_pose)
+            ps.pose.position.z += -self.shake_amount_z / 2.0
 
-        self.follow_pose_pub.publish(ps)
-        rospy.sleep(self.handshake_poses_time_step / 2.0)
+            self.follow_pose_pub.publish(ps)
+            rospy.sleep(self.handshake_poses_time_step / 2.0)
 
-        # go up and wait
-        rospy.loginfo("Going up for s")
-        ps.header.stamp = rospy.Time.now()
-        ps.pose = deepcopy(self.initial_pose)
-        ps.pose.position.z += 0.05
+            # go up and wait
+            rospy.loginfo("Going up for s")
+            ps.header.stamp = rospy.Time.now()
+            ps.pose = deepcopy(self.initial_pose)
+            ps.pose.position.z += self.shake_amount_z / 2.0
 
-        self.follow_pose_pub.publish(ps)
-        rospy.sleep(self.handshake_poses_time_step)
-
-        # go down and wait
-        rospy.loginfo("Going down for s")
-        ps.header.stamp = rospy.Time.now()
-        ps.pose = deepcopy(self.initial_pose)
-        ps.pose.position.z += -0.05
-
-        self.follow_pose_pub.publish(ps)
-        rospy.sleep(self.handshake_poses_time_step)
+            self.follow_pose_pub.publish(ps)
+            rospy.sleep(self.handshake_poses_time_step)
 
         # go to initial pose and wait
         rospy.loginfo("Going back to initial but more back for s")
@@ -120,7 +140,7 @@ class AdmitanceHandshake(object):
     def go_to_initial_pose(self):
         ps = PoseStamped()
         ps.header.stamp = rospy.Time.now()
-        ps.header.frame_id = '/world'
+        ps.header.frame_id = self.global_frame_id
         ps.pose = deepcopy(self.initial_pose)
         self.follow_pose_pub.publish(ps)
 
