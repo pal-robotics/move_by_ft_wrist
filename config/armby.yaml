@@ -26,7 +26,7 @@ min_z: -0.2
 # Rate of goal sending of the node
 rate: 10
 # If to send goals to the real topic, there is a debug topic at /force_torqued_pose
-send_goals: false
+send_goals: true
 
 # Torque stuff
 tx_deadband: 0.1

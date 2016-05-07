@@ -120,16 +120,17 @@ class AdmitanceHandshake(object):
             self.follow_pose_pub.publish(ps)
             rospy.sleep(self.handshake_poses_time_step)
 
+
+        self.deactivate_fingers_interaction()
         # go to initial pose and wait
         rospy.loginfo("Going back to initial but more back for s")
         ps.header.stamp = rospy.Time.now()
         ps.pose = deepcopy(self.initial_pose)
-        ps.pose.position.x += -0.10
+        ps.pose.position.x += -0.20
 
         self.follow_pose_pub.publish(ps)
         rospy.sleep(self.handshake_poses_time_step)
 
-        self.deactivate_fingers_interaction()
 
     def activate_fingers_interaction(self):
         self.activate_pub.publish(Empty())
