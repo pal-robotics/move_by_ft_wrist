@@ -114,14 +114,16 @@ class ArucoFilter(object):
             self.pose_pub.publish(ps)
             if self.send_wrist_goals:
                 self.wrist_pub.publish(ps)
-            # if self.send_head_goals:
-            #     # ps_head = PoseStamped()
-            #     # ps.header.frame_id = self.global_frame_id
-            #     # ps.pose.position.x = self.initial_pose_head_x
-            #     # ps.pose.position.y = self.initial_pose_head_y
-            #     # ps.pose.position.z = self.initial_pose_head_z
-            #     # ps.pose.orientation.w = 1.0
-            #     self.head_pub.publish(ps_head)
+            if self.send_head_goals:
+                ps_head = PoseStamped()
+                ps.header.frame_id = self.global_frame_id
+                ps_head.pose.position.x = self.initial_pose_head_x
+                ps_head.pose.position.y = self.initial_pose_head_y
+                ps_head.pose.position.z = self.initial_pose_head_z
+                ps_head.pose.orientation.w = 1.0
+                self.head_pub.publish(ps_head)
+            self.open_hand()
+
         else:
             if self.new_pose:
                 self.new_pose = False
@@ -148,6 +150,17 @@ class ArucoFilter(object):
 
                 # TODO: deal with orientation
                 goal_pose.pose.orientation = self.initial_pose.orientation
+
+                if self.use_marker_orientation:
+                    # Add roll to the hand, which is yaw in the marker, which will
+                    # be in the wrist frame Z, so yaw too.
+                    o1 = self.initial_pose.orientation
+                    o2 = self.last_pose.pose.orientation
+                    r1, p1, y1 = euler_from_quaternion([o1.x, o1.y, o1.z, o1.w])
+                    r2, p2, y2 = euler_from_quaternion([o2.x, o2.y, o2.z, o2.w])
+                    q = quaternion_from_euler(r1, p2, y1 + y2)
+                    goal_pose.pose.orientation = Quaternion(*q)
+
 
                 self.pose_pub.publish(goal_pose)
                 if self.send_head_goals:
@@ -181,6 +194,8 @@ class ArucoFilter(object):
 
         self.send_head_goals = config['send_head_goals']
         self.send_wrist_goals = config['send_wrist_goals']
+
+        self.use_marker_orientation = config['use_marker_orientation']
 
         # Limits
         self.min_x = config['min_x']
@@ -234,6 +249,19 @@ class ArucoFilter(object):
         jtp = JointTrajectoryPoint()
         # Hardcoded joint limits
         jtp.positions = [6.0, 0.0, 9.0]
+        jtp.time_from_start = rospy.Duration(0.5)
+        jt.points.append(jtp)
+
+        # Send goal
+        self.hand_pub.publish(jt)
+
+    def open_hand(self):
+        jt = JointTrajectory()
+        jt.joint_names = [
+            'hand_right_thumb_joint', 'hand_right_index_joint', 'hand_right_mrl_joint']
+        jtp = JointTrajectoryPoint()
+        # Hardcoded joint limits
+        jtp.positions = [0.0, 0.0, 0.0]
         jtp.time_from_start = rospy.Duration(0.5)
         jt.points.append(jtp)
 
