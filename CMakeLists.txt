@@ -88,6 +88,7 @@ find_package(catkin REQUIRED COMPONENTS
 generate_dynamic_reconfigure_options(
   cfg/Handshake.cfg
   cfg/ForceTorque.cfg
+  cfg/ArucoFilter.cfg
 )
 
 ###################################
@@ -155,6 +156,7 @@ install(PROGRAMS
   scripts/close_hand_by_ft.py
   scripts/wrench_marker.py
   scripts/force_torque_publisher.py
+  scripts/aruco_pose_filter.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

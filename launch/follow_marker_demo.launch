@@ -1,0 +1,11 @@
+<launch>
+    <!-- WBC admitance stack should be started separately ? -->
+    <include file="$(find reemc_wbc_tutorials)/launch/reemc_admitance.launch"/>
+
+    <include file="$(find move_by_ft_wrist)/launch/marker_detector_right.launch"/>
+
+    <node pkg="move_by_ft_wrist" type="aruco_pose_filter.py" name="aruco_pose_filter_demo" />
+
+    <include file="$(find reemc_controller_configuration)/launch/hey5_controller.launch" />
+
+</launch>
