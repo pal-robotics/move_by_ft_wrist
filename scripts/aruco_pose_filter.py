@@ -271,7 +271,7 @@ class ArucoFilter(object):
             'hand_right_thumb_joint', 'hand_right_index_joint', 'hand_right_mrl_joint']
         jtp = JointTrajectoryPoint()
         # Hardcoded joint limits
-        jtp.positions = [6.0, 0.0, 9.0]
+        jtp.positions = [5.5, 0.0, 9.0]
         jtp.time_from_start = rospy.Duration(0.5)
         jt.points.append(jtp)
 
