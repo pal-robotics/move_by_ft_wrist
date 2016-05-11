@@ -1,5 +1,5 @@
 {global_frame_id: /world, goal_timeout: 10.0, initial_pose_head_x: 1.0, initial_pose_head_y: 0.0,
-  initial_pose_head_z: 0.6, initial_pose_pitch_degrees: 60.0, initial_pose_roll_degrees: 0.0,
-  initial_pose_x: 0.4, initial_pose_y: -0.2, initial_pose_yaw_degrees: 0.0, initial_pose_z: 0.2,
+  initial_pose_head_z: 0.6, initial_pose_pitch_degrees: 0.0, initial_pose_roll_degrees: 90.0,
+  initial_pose_x: 0.4, initial_pose_y: -0.2, initial_pose_yaw_degrees: 90.0, initial_pose_z: 0.2,
   max_x: 0.8, max_y: 0.6, max_z: 1.0, min_x: 0.2, min_y: -0.6, min_z: 0.0, rate: 10,
   send_head_goals: true, send_wrist_goals: true, topic_name: /aruco_filtered, use_marker_orientation: true}
