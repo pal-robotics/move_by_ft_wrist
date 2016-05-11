@@ -126,7 +126,7 @@ class ArucoFilter(object):
             # Send home goal
             ps = PoseStamped()
             ps.header.frame_id = self.global_frame_id
-            ps.pose = self.initial_pose
+            ps.pose = deepcopy(self.initial_pose)
             self.pose_pub.publish(ps)
             if self.send_wrist_goals:
                 self.wrist_pub.publish(ps)
@@ -178,7 +178,7 @@ class ArucoFilter(object):
                         [o1.x, o1.y, o1.z, o1.w])
                     r2, p2, y2 = euler_from_quaternion(
                         [o2.x, o2.y, o2.z, o2.w])
-                    q = quaternion_from_euler(r1, p2, y1 + y2)
+                    q = quaternion_from_euler(r1, p1, y1 + y2)
                     goal_pose.pose.orientation = Quaternion(*q)
 
                 self.pose_pub.publish(goal_pose)
