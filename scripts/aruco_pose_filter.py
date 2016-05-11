@@ -139,7 +139,7 @@ class ArucoFilter(object):
                 ps_head.pose.orientation.w = 1.0
                 self.head_pub.publish(ps_head)
                 self.send_head_point_goal(ps_head)
-            self.open_hand()
+            self.thumbs_up_hand()
 
         else:
             if self.new_pose:
@@ -155,10 +155,6 @@ class ArucoFilter(object):
 
                 goal_pose.header.stamp = rospy.Time.now()
 
-                # Set offset for not covering the marker with the hand
-                # And not push the marker itself
-                goal_pose.pose.position.x -= 0.15
-                goal_pose.pose.position.z -= 0.1
 
                 goal_pose.pose.position.x = self.sanitize(goal_pose.pose.position.x,
                                                           self.min_x,
@@ -171,7 +167,7 @@ class ArucoFilter(object):
                                                           self.max_z)
 
                 # TODO: deal with orientation
-                goal_pose.pose.orientation = self.initial_pose.orientation
+                goal_pose.pose.orientation = deepcopy(self.initial_pose.orientation)
 
                 if self.use_marker_orientation:
                     # Add roll to the hand, which is yaw in the marker, which will
@@ -190,6 +186,10 @@ class ArucoFilter(object):
                     self.head_pub.publish(goal_pose)
                     self.send_head_point_goal(goal_pose)
                 if self.send_wrist_goals:
+                    # Set offset for not covering the marker with the hand
+                    # And not push the marker itself
+                    goal_pose.pose.position.x -= 0.15
+                    goal_pose.pose.position.z -= 0.1
                     self.wrist_pub.publish(goal_pose)
                 # Put hand in pointing pose
                 self.pointing_hand()
@@ -291,6 +291,19 @@ class ArucoFilter(object):
         # Send goal
         self.hand_pub.publish(jt)
 
+
+    def thumbs_up_hand(self):
+        jt = JointTrajectory()
+        jt.joint_names = [
+            'hand_right_thumb_joint', 'hand_right_index_joint', 'hand_right_mrl_joint']
+        jtp = JointTrajectoryPoint()
+        # Hardcoded joint limits
+        jtp.positions = [0.0, 6.0, 9.0]
+        jtp.time_from_start = rospy.Duration(0.5)
+        jt.points.append(jtp)
+
+        # Send goal
+        self.hand_pub.publish(jt)
 
 if __name__ == '__main__':
     rospy.init_node('aruco_filter')
