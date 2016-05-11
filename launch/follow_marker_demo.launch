@@ -1,6 +1,6 @@
 <launch>
     <!-- WBC admitance stack should be started separately ? -->
-    <include file="$(find reemc_wbc_tutorials)/launch/reemc_admitance.launch"/>
+    <include file="$(find reemc_wbc_tutorials)/launch/reemc_admitance_no_head.launch"/>
 
     <include file="$(find move_by_ft_wrist)/launch/marker_detector_right.launch"/>
 

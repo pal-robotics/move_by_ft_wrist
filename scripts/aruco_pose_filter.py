@@ -114,9 +114,9 @@ class ArucoFilter(object):
         t = g.goal.target
         t.header.frame_id = pose.header.frame_id
         t.point = pose.pose.position
-        g.pointing_axis.z = 1.0
-        g.pointing_frame = 'stereo_optical_frame'
-        g.min_duration = rospy.Duration(0.1)
+        g.goal.pointing_axis.z = 1.0
+        g.goal.pointing_frame = 'stereo_optical_frame'
+        g.goal.min_duration = rospy.Duration(0.1)
         self.point_head_pub.publish(g)
 
 
