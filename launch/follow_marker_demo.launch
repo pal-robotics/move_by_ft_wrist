@@ -5,7 +5,7 @@
 
     <include file="$(find move_by_ft_wrist)/launch/marker_detector_right.launch"/>
 
-    <node pkg="move_by_ft_wrist" type="aruco_pose_filter.py" name="aruco_pose_filter_demo" >
+    <node pkg="move_by_ft_wrist" type="aruco_pose_filter.py" name="aruco_pose_filter_demo" output="screen">
         <rosparam file="$(find move_by_ft_wrist)/config/aruco_pose_filter_demo.yaml"/>
     </node>
 

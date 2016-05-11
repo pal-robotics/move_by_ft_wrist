@@ -18,7 +18,6 @@ from move_by_ft_wrist.cfg import ArucoFilterConfig
 from math import radians
 from copy import deepcopy
 
-
 class ArucoFilter(object):
     def __init__(self):
         rospy.loginfo("Initializing...")
@@ -178,8 +177,11 @@ class ArucoFilter(object):
                         [o1.x, o1.y, o1.z, o1.w])
                     r2, p2, y2 = euler_from_quaternion(
                         [o2.x, o2.y, o2.z, o2.w])
-                    q = quaternion_from_euler(r1, p1, y1 + y2)
+                    # rospy.loginfo("Marker rpy: " + str( (r2, p2, y2) ))
+                    # rospy.loginfo("initialrpy: " + str( (r1, p1, y1) ))
+                    q = quaternion_from_euler(r1 + (r2 + 1.57), p1 + (-y2), y1 + p2)# y1 + y2)
                     goal_pose.pose.orientation = Quaternion(*q)
+
 
                 self.pose_pub.publish(goal_pose)
                 if self.send_head_goals:
@@ -271,7 +273,7 @@ class ArucoFilter(object):
             'hand_right_thumb_joint', 'hand_right_index_joint', 'hand_right_mrl_joint']
         jtp = JointTrajectoryPoint()
         # Hardcoded joint limits
-        jtp.positions = [5.5, 0.0, 9.0]
+        jtp.positions = [5.5, 0.0, 6.0]
         jtp.time_from_start = rospy.Duration(0.5)
         jt.points.append(jtp)
 
@@ -298,7 +300,7 @@ class ArucoFilter(object):
             'hand_right_thumb_joint', 'hand_right_index_joint', 'hand_right_mrl_joint']
         jtp = JointTrajectoryPoint()
         # Hardcoded joint limits
-        jtp.positions = [0.0, 6.0, 9.0]
+        jtp.positions = [0.0, 5.5, 6.0]
         jtp.time_from_start = rospy.Duration(0.5)
         jt.points.append(jtp)
 
