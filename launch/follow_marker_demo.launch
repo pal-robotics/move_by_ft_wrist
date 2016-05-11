@@ -10,4 +10,22 @@
 
     <include file="$(find reemc_controller_configuration)/launch/hey5_controller.launch" />
 
+
+  <node name="joint_trajectory_controllers_spawner"
+        pkg="controller_manager" type="spawner" output="screen"
+        args="head_controller" />
+
+
+  <!-- Point head action -->
+  <group ns="head_controller">
+    <node name="point_head_action" pkg="head_action" type="head_action" output="screen" >
+      <rosparam>
+        pan_link:  head_1_link
+        tilt_link: head_2_link
+        success_angle_threshold: 0.01
+      </rosparam>
+    </node>
+  </group>
+
+
 </launch>

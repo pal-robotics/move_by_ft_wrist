@@ -11,6 +11,7 @@ import rospy
 from geometry_msgs.msg import PoseStamped, Pose, Quaternion
 from tf import TransformListener, ExtrapolationException
 from tf.transformations import quaternion_from_euler, euler_from_quaternion
+from control_msgs.msg import PointHeadActionGoal
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from dynamic_reconfigure.server import Server
 from move_by_ft_wrist.cfg import ArucoFilterConfig
@@ -55,13 +56,16 @@ class ArucoFilter(object):
                                         PoseStamped,
                                         queue_size=1)
 
+        self.point_head_pub = rospy.Publisher('/head_controller/point_head_action/goal',
+                                              PointHeadActionGoal,
+                                              queue_size=1)
+
         self.wrist_pub = rospy.Publisher('/whole_body_kinematic_controler/wrist_right_ft_link_goal',
-                                        PoseStamped,
-                                        queue_size=1)
+                                         PoseStamped,
+                                         queue_size=1)
 
         self.hand_pub = rospy.Publisher(
             '/right_hand_controller/command', JointTrajectory, queue_size=1)
-
 
         rospy.sleep(1.0)
         self.run()
@@ -105,6 +109,17 @@ class ArucoFilter(object):
                 ps.header.stamp = self.tf_l.getLatestCommonTime(
                     self.global_frame_id, from_frame)
 
+    def send_head_point_goal(self, pose):
+        g = PointHeadActionGoal()
+        t = g.goal.target
+        t.header.frame_id = pose.header.frame_id
+        t.point = pose.pose.position
+        g.pointing_axis.z = 1.0
+        g.pointing_frame = 'stereo_optical_frame'
+        g.min_duration = rospy.Duration(0.1)
+        self.point_head_pub.publish(g)
+
+
     def publish_goal(self):
         if not self.new_pose and rospy.Time.now() - self.last_goal_timestamp > rospy.Duration(self.goal_timeout):
             # Send home goal
@@ -116,12 +131,13 @@ class ArucoFilter(object):
                 self.wrist_pub.publish(ps)
             if self.send_head_goals:
                 ps_head = PoseStamped()
-                ps.header.frame_id = self.global_frame_id
+                ps_head.header.frame_id = self.global_frame_id
                 ps_head.pose.position.x = self.initial_pose_head_x
                 ps_head.pose.position.y = self.initial_pose_head_y
                 ps_head.pose.position.z = self.initial_pose_head_z
                 ps_head.pose.orientation.w = 1.0
                 self.head_pub.publish(ps_head)
+                self.send_head_point_goal(ps_head)
             self.open_hand()
 
         else:
@@ -156,15 +172,17 @@ class ArucoFilter(object):
                     # be in the wrist frame Z, so yaw too.
                     o1 = self.initial_pose.orientation
                     o2 = self.last_pose.pose.orientation
-                    r1, p1, y1 = euler_from_quaternion([o1.x, o1.y, o1.z, o1.w])
-                    r2, p2, y2 = euler_from_quaternion([o2.x, o2.y, o2.z, o2.w])
+                    r1, p1, y1 = euler_from_quaternion(
+                        [o1.x, o1.y, o1.z, o1.w])
+                    r2, p2, y2 = euler_from_quaternion(
+                        [o2.x, o2.y, o2.z, o2.w])
                     q = quaternion_from_euler(r1, p2, y1 + y2)
                     goal_pose.pose.orientation = Quaternion(*q)
-
 
                 self.pose_pub.publish(goal_pose)
                 if self.send_head_goals:
                     self.head_pub.publish(goal_pose)
+                    self.send_head_point_goal(goal_pose)
                 if self.send_wrist_goals:
                     self.wrist_pub.publish(goal_pose)
                 # Put hand in pointing pose
@@ -224,7 +242,6 @@ class ArucoFilter(object):
         self.initial_pose_head_x = config['initial_pose_head_x']
         self.initial_pose_head_y = config['initial_pose_head_y']
         self.initial_pose_head_z = config['initial_pose_head_z']
-
 
         if config['global_frame_id'][0] != '/':
             config['global_frame_id'] = '/' + config['global_frame_id']
