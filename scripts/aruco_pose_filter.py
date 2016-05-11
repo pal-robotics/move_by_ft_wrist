@@ -155,6 +155,11 @@ class ArucoFilter(object):
 
                 goal_pose.header.stamp = rospy.Time.now()
 
+                # Set offset for not covering the marker with the hand
+                # And not push the marker itself
+                goal_pose.pose.position.x -= 0.15
+                goal_pose.pose.position.z -= 0.1
+
                 goal_pose.pose.position.x = self.sanitize(goal_pose.pose.position.x,
                                                           self.min_x,
                                                           self.max_x)

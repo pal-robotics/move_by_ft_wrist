@@ -1,6 +1,7 @@
 <launch>
     <!-- WBC admitance stack should be started separately ? -->
-    <include file="$(find reemc_wbc_tutorials)/launch/reemc_admitance_no_head.launch"/>
+    <!-- <include file="$(find reemc_wbc_tutorials)/launch/reemc_admitance_no_head.launch"/> -->
+    <include file="$(find reemc_wbc_tutorials)/launch/reemc_admitance.launch"/>
 
     <include file="$(find move_by_ft_wrist)/launch/marker_detector_right.launch"/>
 
@@ -11,13 +12,13 @@
     <include file="$(find reemc_controller_configuration)/launch/hey5_controller.launch" />
 
 
-  <node name="joint_trajectory_controllers_spawner"
+  <!-- <node name="joint_trajectory_controllers_spawner"
         pkg="controller_manager" type="spawner" output="screen"
-        args="head_controller" />
+        args="head_controller" /> -->
 
 
   <!-- Point head action -->
-  <group ns="head_controller">
+  <!-- <group ns="head_controller">
     <node name="point_head_action" pkg="head_action" type="head_action" output="screen" >
       <rosparam>
         pan_link:  head_1_link
@@ -25,7 +26,7 @@
         success_angle_threshold: 0.01
       </rosparam>
     </node>
-  </group>
+  </group> --> 
 
 
 </launch>
