@@ -4,6 +4,7 @@
   <version>0.0.0</version>
   <description>The move_by_ft_wrist package</description>
 
+  <author email="sam.pfeiffer@pal-robotics.com">Sam Pfeiffer</author>
   <maintainer email="sam.pfeiffer@pal-robotics.com">Sam Pfeiffer</maintainer>
 
   <license>BSD</license>
